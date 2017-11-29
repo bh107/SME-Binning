@@ -8,7 +8,7 @@ namespace SME_Binning
 	public class Adder : SimpleProcess
 	{
 		[InputBus]
-		BRAM1BOut bram1out;
+		AdderIn adderin;
 		[InputBus]
 		BRAM0AOutPipelinedOut bram0out;
 
@@ -17,7 +17,32 @@ namespace SME_Binning
 
 		protected override void OnTick()
 		{
-			output.din = bram0out.dout + bram1out.dout;
+			output.din = bram0out.dout + adderin.dout;
+		}
+	}
+
+	public class AdderInMux : SimpleProcess
+	{
+		[InputBus]
+		BRAM1BOut bram1bout;
+		[InputBus]
+		BRAM1AForwarded bram1aout;
+		[InputBus]
+		Forward forward;
+
+		[OutputBus]
+		AdderIn adderin;
+
+		protected override void OnTick()
+		{
+			if (forward.flg)
+			{
+				adderin.dout = bram1aout.dout;
+			}
+			else
+			{
+				adderin.dout = bram1bout.dout;
+			}
 		}
 	}
 
@@ -48,10 +73,6 @@ namespace SME_Binning
 					}
 					aout.dout = data[ain.addr];
 				}
-				else
-				{
-					aout.dout = 0;
-				}
 
 				if (bin.ena)
 				{
@@ -60,10 +81,6 @@ namespace SME_Binning
 						data[bin.addr] = bin.din;
 					}
 					bout.dout = data[bin.addr];
-				}
-				else
-				{
-					bout.dout = 0;
 				}
 			}
 		}
@@ -96,10 +113,6 @@ namespace SME_Binning
 					}
 					aout.dout = data[ain.addr];
 				}
-				else
-				{
-					aout.dout = 0;
-				}
 
 				if (bin.ena)
 				{
@@ -108,10 +121,6 @@ namespace SME_Binning
 						data[bin.addr] = bin.din;
 					}
 					bout.dout = data[bin.addr];
-				}
-				else
-				{
-					bout.dout = 0;
 				}
 			}
 		}
@@ -140,7 +149,7 @@ namespace SME_Binning
 			}
 			else
 			{
-				bram.addr = axi.addr;
+				bram.addr = (UInt12)(axi.addr >> 2);
 				bram.din = axi.din;
 				bram.ena = axi.ena;
 				bram.we = axi.we;
@@ -193,7 +202,7 @@ namespace SME_Binning
 		{
 			if (ctrl.outputrdy == 1)
 			{
-				bram.addr = axi.addr;
+				bram.addr = (UInt14)(axi.addr >> 2);
 				bram.din = axi.din;
 				bram.ena = axi.ena;
 				bram.we = axi.we;
@@ -215,7 +224,7 @@ namespace SME_Binning
 		AXIInput input;
 
 		[OutputBus]
-		AXIOutput output;
+		OutputStep0 output;
 		[OutputBus]
 		BRAM0AInIntermediate bramain;
 		[OutputBus]
@@ -225,12 +234,14 @@ namespace SME_Binning
 		UInt12 offset = 0;
 		uint size = 0;
 		byte countdown = 0;
+		bool can_reset = true;
 
 		protected override void OnTick()
 		{
+			output.outputrdy = (uint)(offset >= size ? 1 : 0);
 			if (active)
 			{
-				if (offset == size)
+				if (offset >= size)
 				{
 					active = false;
 					bramain.ena = false;
@@ -253,24 +264,15 @@ namespace SME_Binning
 			}
 			else
 			{
-				if (input.rst == 1)
+				if (can_reset && input.rst == 1)
 				{
 					offset = 0;
 					size = input.size;
 					active = true;
 					countdown = 1;
-					output.outputrdy = 0;
-				}
-				else if (countdown == 0)
-				{
-					output.outputrdy = 1;
-				}
-				else
-				{
-					output.outputrdy = 0;
-					countdown--;
 				}
 			}
+			can_reset = input.rst == 0;
 		}
 	}
 
@@ -306,6 +308,21 @@ namespace SME_Binning
 	}
 
 	[ClockedProcess]
+	public class OutputPipe0 : SimpleProcess
+	{
+		[InputBus]
+		OutputStep0 input;
+
+		[OutputBus]
+		OutputStep1 output;
+
+		protected override void OnTick()
+		{
+			output.outputrdy = input.outputrdy;
+		}
+	}
+
+	[ClockedProcess]
 	public class Pipe : SimpleProcess
 	{
 		[InputBus]
@@ -315,25 +332,38 @@ namespace SME_Binning
 		[InputBus]
 		AXIInput axiin;
 		[InputBus]
-		AXIOutput axiout;
+		OutputStep1 axiout;
+		[InputBus]
+		BRAM1AIn bram1ain;
 
 		[OutputBus]
 		BRAM0AOutPipelinedOut bram0aout;
 		[OutputBus]
 		BRAM0BOutPipelinedOut bram0bout;
+		[OutputBus]
+		Forward forward;
+		[OutputBus]
+		BRAM1AForwarded bram1aforwarded;
+		[OutputBus]
+		AXIOutput output; // TODO that naming though
 
 		protected override void OnTick()
 		{
-			if (axiin.inputrdy == 1 || axiout.outputrdy == 0)
+			if (axiout.outputrdy == 0) // TODO vivado/MAXIVBinningAXIZynq/bd4 simulation forces.txt
 			{
 				bram0aout.dout = bram0ain.dout;
 				bram0bout.dout = bram0bin.dout;
+				forward.flg = bram1ain.we == 0xF && bram1ain.addr == bram0bin.dout;
+				bram1aforwarded.dout = bram1ain.din;
 			}
 			else
 			{
 				bram0aout.dout = 0;
 				bram0bout.dout = 0;
+				forward.flg = true;
+				bram1aforwarded.dout = 0;
 			}
+			output.outputrdy = axiout.outputrdy;
 		}
 	}
 

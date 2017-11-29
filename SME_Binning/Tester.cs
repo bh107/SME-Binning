@@ -27,7 +27,7 @@ namespace SME_Binning
 		};
 
 		uint[] outputdata = {
-			9, 5, 15, 
+			9, 5, 15,
 		};
 
 		Random rand = new Random();
@@ -48,7 +48,7 @@ namespace SME_Binning
 			// Transfer inputdata
 			for (uint i = 0; i < inputdata.Length; i++)
 			{
-				bram0in.addr = (UInt12) i;
+				bram0in.addr = (UInt14)(i << 2);
 				bram0in.din = inputdata[i];
 				bram0in.ena = true;
 				bram0in.we = 0xF;
@@ -64,21 +64,23 @@ namespace SME_Binning
 
 			// Start the network
 			input.inputrdy = 1;
-			input.size = (uint) (inputdata.Length >> 1);
+			input.size = (uint)(inputdata.Length >> 1);
 			input.rst = 1;
 			await ClockAsync();
 			input.rst = 0;
 			await ClockAsync();
 			await ClockAsync();
+			await ClockAsync();
+			await ClockAsync(); // TODO Wait for signal to propagate...
 
 			// Wait for the network to finish
-			while (output.outputrdy == 0) await ClockAsync();
+			while (output.outputrdy == 0) { await ClockAsync(); }
 			input.inputrdy = 0;
 
 			// Verify that the output matches the precomputed output
 			for (uint i = 0; i < outputdata.Length; i++)
 			{
-				bram1in.addr = (UInt14) i;
+				bram1in.addr = (short)(i << 2);
 				bram1in.ena = true;
 				bram1in.we = 0;
 				bram1in.din = 0;
@@ -104,7 +106,7 @@ namespace SME_Binning
 			// Transfer the input data
 			for (uint i = 0; i < inputdata.Length; i++)
 			{
-				bram0in.addr = (UInt12)i;
+				bram0in.addr = (UInt14)(i << 2);
 				bram0in.din = inputdata[i];
 				bram0in.ena = true;
 				bram0in.we = 0xF;
@@ -124,6 +126,8 @@ namespace SME_Binning
 			input.rst = 1;
 			await ClockAsync();
 			input.rst = 0;
+			await ClockAsync(); // TODO same as above
+			await ClockAsync();
 			await ClockAsync();
 			await ClockAsync();
 
@@ -134,7 +138,7 @@ namespace SME_Binning
 			// Verify that the output matches the precomputed output
 			for (uint i = 0; i < outputdata.Length; i++)
 			{
-				bram1in.addr = (UInt14)i;
+				bram1in.addr = (short)(i << 2);
 				bram1in.ena = true;
 				bram1in.we = 0;
 				bram1in.din = 0;
@@ -179,7 +183,7 @@ namespace SME_Binning
 			// Transfer inputdata to input memory
 			for (uint i = 0; i < inputsize; i++)
 			{
-				bram0in.addr = (UInt12) i;
+				bram0in.addr = (UInt14)(i << 2);
 				bram0in.din = inputdata[i];
 				bram0in.ena = true;
 				bram0in.we = 0xF;
@@ -189,7 +193,7 @@ namespace SME_Binning
 			// Zero initialize output memory
 			for (uint i = 0; i < outputsize; i++)
 			{
-				bram1in.addr = (UInt14) i;
+				bram1in.addr = (short)(i << 2);
 				bram1in.din = 0;
 				bram1in.ena = true;
 				bram1in.we = 0xF;
@@ -205,12 +209,14 @@ namespace SME_Binning
 			bram0in.we = 0;
 			await ClockAsync();
 			input.inputrdy = 1;
-			input.size = (uint) inputmid;
+			input.size = (uint)inputmid;
 			input.rst = 1;
 			await ClockAsync();
 			input.rst = 0;
 			await ClockAsync();
 			await ClockAsync();
+			await ClockAsync();
+			await ClockAsync(); // TODO as above
 
 			int clocks = 3;
 			// Wait for network to finish
@@ -226,7 +232,7 @@ namespace SME_Binning
 			int errors = 0;
 			for (uint i = 0; i < outputsize; i++)
 			{
-				bram1in.addr = (UInt14) i;
+				bram1in.addr = (short)(i << 2);
 				bram1in.ena = true;
 				bram1in.din = 0;
 				bram1in.we = 0;
@@ -234,7 +240,7 @@ namespace SME_Binning
 				await ClockAsync();
 				bool equal = bram1out.dout == outputdata[i];
 				System.Diagnostics.Debug.Assert(equal, bram1out.dout + " != " + outputdata[i]);
- 				errors += equal ? 0 : 1;
+				errors += equal ? 0 : 1;
 			}
 		}
 	}

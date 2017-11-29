@@ -5,11 +5,23 @@ using SME.VHDL;
 namespace SME_Binning
 {
 	
+	[InitializedBus]
+	public interface AdderIn : IBus
+	{
+		uint dout { get; set; }
+	}
+
+	[InitializedBus]
+	public interface AdderOut : IBus
+	{
+		uint din { get; set; }
+	}
+
 	[InitializedBus, TopLevelInputBus]
 	public interface AXIBRAM0In : IBus
 	{
 		bool ena { get; set; }
-		UInt12 addr { get; set; }
+		UInt14 addr { get; set; }
 		uint din { get; set; }
 		UInt4 we { get; set; }
 	}
@@ -24,7 +36,7 @@ namespace SME_Binning
 	public interface AXIBRAM1In : IBus
 	{
 		bool ena { get; set; }
-		UInt14 addr { get; set; }
+		short addr { get; set; }
 		uint din { get; set; }
 		UInt4 we { get; set; }
 	}
@@ -33,6 +45,20 @@ namespace SME_Binning
 	public interface AXIBRAM1Out : IBus
 	{
 		uint dout { get; set; }
+	}
+
+	[InitializedBus, TopLevelInputBus]
+	public interface AXIInput : IBus
+	{
+		uint inputrdy { get; set; }
+		uint size { get; set; }
+		uint rst { get; set; }
+	}
+
+	[InitializedBus, TopLevelOutputBus]
+	public interface AXIOutput : IBus
+	{
+		uint outputrdy { get; set; }
 	}
 
 	[InitializedBus, TopLevelOutputBus]
@@ -108,9 +134,9 @@ namespace SME_Binning
 	}
 
 	[InitializedBus]
-	public interface AdderOut : IBus
+	public interface BRAM1AForwarded : IBus
 	{
-		uint din { get; set; }
+		uint dout { get; set; }
 	}
 
 	[InitializedBus, TopLevelInputBus]
@@ -134,16 +160,20 @@ namespace SME_Binning
 		uint dout { get; set; }
 	}
 
-	[InitializedBus, TopLevelInputBus]
-	public interface AXIInput : IBus
+	[InitializedBus]
+	public interface Forward : IBus
 	{
-		uint inputrdy { get; set; }
-		uint size { get; set; }
-		uint rst { get; set; }
+		bool flg { get; set; }
 	}
 
-	[InitializedBus, TopLevelOutputBus]
-	public interface AXIOutput : IBus
+	[InitializedBus]
+	public interface OutputStep0 : IBus
+	{
+		uint outputrdy { get; set; }
+	}
+
+	[InitializedBus]
+	public interface OutputStep1 : IBus
 	{
 		uint outputrdy { get; set; }
 	}
