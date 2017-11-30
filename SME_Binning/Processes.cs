@@ -193,10 +193,10 @@ namespace SME_Binning
 		[InputBus]
 		BRAM0BOutPipelinedOut pipe;
 		[InputBus]
-		AXIOutput ctrl;
+		OutputStep2 ctrl;
 
 		[OutputBus]
-		BRAM1AIn bram;
+		BRAM1AInBroadcasterIn bram;
 
 		protected override void OnTick()
 		{
@@ -214,6 +214,30 @@ namespace SME_Binning
 				bram.ena = true;
 				bram.we = 0xF;
 			}
+		}
+	}
+
+	public class BRAM1AInBroadcaster : SimpleProcess
+	{
+		[InputBus]
+		BRAM1AInBroadcasterIn input;
+
+		[OutputBus]
+		BRAM1AInBroadcasterOut output0;
+		[OutputBus]
+		BRAM1AIn output1;
+
+		protected override void OnTick()
+		{
+			output0.ena = input.ena;
+			output0.addr = input.addr;
+			output0.din = input.din;
+			output0.we = input.we;
+
+			output1.ena = input.ena;
+			output1.addr = input.addr;
+			output1.din = input.din;
+			output1.we = input.we;
 		}
 	}
 
@@ -334,7 +358,7 @@ namespace SME_Binning
 		[InputBus]
 		OutputStep1 axiout;
 		[InputBus]
-		BRAM1AIn bram1ain;
+		BRAM1AInBroadcasterOut bram1ain;
 
 		[OutputBus]
 		BRAM0AOutPipelinedOut bram0aout;
@@ -345,7 +369,7 @@ namespace SME_Binning
 		[OutputBus]
 		BRAM1AForwarded bram1aforwarded;
 		[OutputBus]
-		AXIOutput output; // TODO that naming though
+		OutputStep2 output; // TODO that naming though
 
 		protected override void OnTick()
 		{
@@ -364,6 +388,22 @@ namespace SME_Binning
 				bram1aforwarded.dout = 0;
 			}
 			output.outputrdy = axiout.outputrdy;
+		}
+	}
+
+	public class SignalConcat : SimpleProcess
+	{
+		[InputBus]
+		OutputStep0 dist;
+		[InputBus]
+		OutputStep2 pipe;
+
+		[OutputBus]
+		AXIOutput axi;
+
+		protected override void OnTick()
+		{
+			axi.outputrdy = (dist.outputrdy << 1) | pipe.outputrdy;
 		}
 	}
 

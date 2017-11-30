@@ -67,14 +67,11 @@ namespace SME_Binning
 			input.size = (uint)(inputdata.Length >> 1);
 			input.rst = 1;
 			await ClockAsync();
-			input.rst = 0;
 			await ClockAsync();
 			await ClockAsync();
-			await ClockAsync();
-			await ClockAsync(); // TODO Wait for signal to propagate...
 
 			// Wait for the network to finish
-			while (output.outputrdy == 0) { await ClockAsync(); }
+			while (output.outputrdy != 3) { Console.WriteLine("{0}", output.outputrdy); await ClockAsync(); }
 			input.inputrdy = 0;
 
 			// Verify that the output matches the precomputed output
@@ -88,12 +85,18 @@ namespace SME_Binning
 				await ClockAsync();
 				System.Diagnostics.Debug.Assert(bram1out.dout == outputdata[i], bram1out.dout + " != " + outputdata[i]);
 			}
-
+			//return;
 			/*****
 			 * 
 			 * Continueous test, i.e. whether on not multiple inputs into same bins will work.
 			 * 
 			 *****/
+			// Ensure that the network is waiting for input
+			await ClockAsync();
+			input.inputrdy = 0;
+			input.size = 0;
+			input.rst = 0;
+
 			// Define additional input data
 			inputdata = new uint[] {
 				12, 15, 3, 5, 1,
@@ -125,14 +128,11 @@ namespace SME_Binning
 			input.size = (uint)(inputdata.Length >> 1);
 			input.rst = 1;
 			await ClockAsync();
-			input.rst = 0;
 			await ClockAsync(); // TODO same as above
-			await ClockAsync();
-			await ClockAsync();
 			await ClockAsync();
 
 			// Wait for the network to finish
-			while (output.outputrdy == 0) await ClockAsync();
+			while (output.outputrdy != 3) await ClockAsync();
 			input.inputrdy = 0;
 
 			// Verify that the output matches the precomputed output
@@ -152,6 +152,12 @@ namespace SME_Binning
 			 * Generated test
 			 * 
 			 *****/
+			// Ensure that the network is waiting for input
+			await ClockAsync();
+			input.inputrdy = 0;
+			input.size = 0;
+			input.rst = 0;
+
 			// Set the sizes used by the generated test
 			int inputsize = 2304; // 9kb / 4
 			int inputmid = inputsize >> 1;
@@ -212,15 +218,12 @@ namespace SME_Binning
 			input.size = (uint)inputmid;
 			input.rst = 1;
 			await ClockAsync();
-			input.rst = 0;
-			await ClockAsync();
-			await ClockAsync();
 			await ClockAsync();
 			await ClockAsync(); // TODO as above
 
 			int clocks = 3;
 			// Wait for network to finish
-			while (output.outputrdy == 0)
+			while (output.outputrdy != 3)
 			{
 				await ClockAsync();
 				clocks++;

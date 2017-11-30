@@ -134,6 +134,24 @@ namespace SME_Binning
 	}
 
 	[InitializedBus]
+	public interface BRAM1AInBroadcasterIn : IBus
+	{
+		bool ena { get; set; }
+		UInt14 addr { get; set; }
+		uint din { get; set; }
+		UInt4 we { get; set; }
+	}
+
+	[InitializedBus]
+	public interface BRAM1AInBroadcasterOut : IBus
+	{
+		bool ena { get; set; }
+		UInt14 addr { get; set; }
+		uint din { get; set; }
+		UInt4 we { get; set; }
+	}
+
+	[InitializedBus]
 	public interface BRAM1AForwarded : IBus
 	{
 		uint dout { get; set; }
@@ -174,6 +192,12 @@ namespace SME_Binning
 
 	[InitializedBus]
 	public interface OutputStep1 : IBus
+	{
+		uint outputrdy { get; set; }
+	}
+
+	[InitializedBus]
+	public interface OutputStep2 : IBus
 	{
 		uint outputrdy { get; set; }
 	}
