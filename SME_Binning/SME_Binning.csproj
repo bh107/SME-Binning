@@ -31,22 +31,56 @@
   <ItemGroup>
     <Reference Include="System" />
     <Reference Include="Castle.Core">
-      <HintPath>..\packages\Castle.Core.3.3.3\lib\net45\Castle.Core.dll</HintPath>
+      <HintPath>..\packages\Castle.Core.4.2.1\lib\net45\Castle.Core.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Configuration" />
+    <Reference Include="Mono.Cecil">
+      <HintPath>..\packages\Mono.Cecil.0.9.5.4\lib\net40\Mono.Cecil.dll</HintPath>
+    </Reference>
+    <Reference Include="Mono.Cecil.Mdb">
+      <HintPath>..\packages\Mono.Cecil.0.9.5.4\lib\net40\Mono.Cecil.Mdb.dll</HintPath>
+    </Reference>
+    <Reference Include="Mono.Cecil.Pdb">
+      <HintPath>..\packages\Mono.Cecil.0.9.5.4\lib\net40\Mono.Cecil.Pdb.dll</HintPath>
+    </Reference>
+    <Reference Include="Mono.Cecil.Rocks">
+      <HintPath>..\packages\Mono.Cecil.0.9.5.4\lib\net40\Mono.Cecil.Rocks.dll</HintPath>
+    </Reference>
+    <Reference Include="ICSharpCode.NRefactory.Cecil">
+      <HintPath>..\packages\ICSharpCode.NRefactory.5.5.1\lib\Net40\ICSharpCode.NRefactory.Cecil.dll</HintPath>
+    </Reference>
+    <Reference Include="ICSharpCode.NRefactory.CSharp">
+      <HintPath>..\packages\ICSharpCode.NRefactory.5.5.1\lib\Net40\ICSharpCode.NRefactory.CSharp.dll</HintPath>
+    </Reference>
+    <Reference Include="ICSharpCode.NRefactory">
+      <HintPath>..\packages\ICSharpCode.NRefactory.5.5.1\lib\Net40\ICSharpCode.NRefactory.dll</HintPath>
+    </Reference>
+    <Reference Include="ICSharpCode.NRefactory.Xml">
+      <HintPath>..\packages\ICSharpCode.NRefactory.5.5.1\lib\Net40\ICSharpCode.NRefactory.Xml.dll</HintPath>
+    </Reference>
+    <Reference Include="ICSharpCode.Decompiler">
+      <HintPath>..\packages\ICSharpCode.Decompiler.2.3.1\lib\Net40\ICSharpCode.Decompiler.dll</HintPath>
+    </Reference>
+    <Reference Include="Newtonsoft.Json">
+      <HintPath>..\packages\Newtonsoft.Json.10.0.3\lib\net45\Newtonsoft.Json.dll</HintPath>
     </Reference>
     <Reference Include="SME">
-      <HintPath>..\packages\SME.0.1\lib\net45\SME.dll</HintPath>
+      <HintPath>..\packages\SME.0.3.2\lib\net45\SME.dll</HintPath>
     </Reference>
-    <Reference Include="SME.Render.GraphViz">
-      <HintPath>..\packages\SME.GraphViz.0.1\lib\net45\SME.Render.GraphViz.dll</HintPath>
+    <Reference Include="SME.AST">
+      <HintPath>..\packages\SME.AST.0.3.2\lib\net45\SME.AST.dll</HintPath>
     </Reference>
-    <Reference Include="SME.Render.VHDL.Attributes">
-      <HintPath>..\packages\SME.VHDL.0.1\lib\net45\SME.Render.VHDL.Attributes.dll</HintPath>
+    <Reference Include="SME.GraphViz">
+      <HintPath>..\packages\SME.GraphViz.0.3.2\lib\net45\SME.GraphViz.dll</HintPath>
     </Reference>
-    <Reference Include="SME.Render.VHDL.Components">
-      <HintPath>..\packages\SME.VHDL.0.1\lib\net45\SME.Render.VHDL.Components.dll</HintPath>
+    <Reference Include="SME.VHDL">
+      <HintPath>..\packages\SME.VHDL.0.3.2\lib\net45\SME.VHDL.dll</HintPath>
     </Reference>
-    <Reference Include="SME.Render.VHDL.CSVTracer">
-      <HintPath>..\packages\SME.VHDL.0.1\lib\net45\SME.Render.VHDL.CSVTracer.dll</HintPath>
+    <Reference Include="SME.CPP">
+      <HintPath>..\packages\SME.CPP.0.3.2\lib\net45\SME.CPP.dll</HintPath>
+    </Reference>
+    <Reference Include="SME.Tracer">
+      <HintPath>..\packages\SME.Tracer.0.3.2\lib\net45\SME.Tracer.dll</HintPath>
     </Reference>
   </ItemGroup>
   <ItemGroup>
