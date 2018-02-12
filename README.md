@@ -20,7 +20,7 @@ with an output buffer of 10000. To get the results with an output buffer of
 100000, the utilization is 10 times bigger, as the biggest resource consumption
 is Block RAM.
 * Xilinx Zynq Z7020 at 100 MHz at ~10 % utilization, resulting in an inner
-  processing speed of 32 x 100 = ~3200 Mbps per unit. I.e. 32000 x 10 = ~32000
+  processing speed of 32 x 100 = ~3200 Mbps per unit. I.e. 3200 x 10 = ~3200
   Mbps = ~32 Gbps
 * Xilinx Kintex Ultrascale+ xcku5p at 590 MHz at ~3 % utilization, resulting in
   an inner processing speed of 32 x 590 = ~18880 Mbps. I.e. 18880 x 33 =
