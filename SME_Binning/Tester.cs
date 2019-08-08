@@ -32,8 +32,24 @@ namespace SME_Binning
 
 		Random rand = new Random();
 
-		public async override System.Threading.Tasks.Task Run()
+		public bool Completed = false;
+
+		private readonly bool m_shortTest;
+		
+		public FullTester() 
+			: this(false)
+		{ 
+		}
+
+        public FullTester(bool shortTest)
+        {
+			m_shortTest = shortTest;
+        }
+
+        public async override System.Threading.Tasks.Task Run()
 		{
+            Completed = false;
+
 			/*****
 			 * 
 			 * Hard coded test
@@ -147,6 +163,13 @@ namespace SME_Binning
 				System.Diagnostics.Debug.Assert(bram1out.dout == outputdata[i], bram1out.dout + " != " + outputdata[i]);
 			}
 
+			if (m_shortTest)
+			{
+				await ClockAsync();
+				Completed = true;
+				return;
+			}
+
 			/*****
 			 * 
 			 * Generated test
@@ -245,6 +268,9 @@ namespace SME_Binning
 				System.Diagnostics.Debug.Assert(equal, bram1out.dout + " != " + outputdata[i]);
 				errors += equal ? 0 : 1;
 			}
+
+			await ClockAsync();
+			Completed = true;
 		}
 	}
 
