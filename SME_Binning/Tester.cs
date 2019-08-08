@@ -8,18 +8,18 @@ namespace SME_Binning
     public class FullTester : SimulationProcess
 	{
 		[InputBus]
-		AXIOutput output;
+		private readonly AXIOutput output = Scope.CreateOrLoadBus<AXIOutput>();
 		[InputBus]
-		AXIBRAM0Out bram0out;
+		private readonly AXIBRAM0Out bram0out = Scope.CreateOrLoadBus<AXIBRAM0Out>();
 		[InputBus]
-		AXIBRAM1Out bram1out;
+		private readonly AXIBRAM1Out bram1out = Scope.CreateOrLoadBus<AXIBRAM1Out>();
 
 		[OutputBus]
-		AXIInput input;
+		private readonly AXIInput input = Scope.CreateOrLoadBus<AXIInput>();
 		[OutputBus]
-		AXIBRAM0In bram0in;
+		private readonly AXIBRAM0In bram0in = Scope.CreateOrLoadBus<AXIBRAM0In>();
 		[OutputBus]
-		AXIBRAM1In bram1in;
+		private readonly AXIBRAM1In bram1in = Scope.CreateOrLoadBus<AXIBRAM1In>();
 
 		uint[] inputdata = {
 			3, 4, 1, 6, 7, 8,

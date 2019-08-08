@@ -8,12 +8,12 @@ namespace SME_Binning
 	public class Adder : SimpleProcess
 	{
 		[InputBus]
-		AdderIn adderin;
+		private readonly AdderIn adderin = Scope.CreateOrLoadBus<AdderIn>();
 		[InputBus]
-		BRAM0AOutPipelinedOut bram0out;
+		private BRAM0AOutPipelinedOut bram0out = Scope.CreateOrLoadBus<BRAM0AOutPipelinedOut>();
 
 		[OutputBus]
-		AdderOut output;
+		private readonly AdderOut output = Scope.CreateOrLoadBus<AdderOut>();
 
 		protected override void OnTick()
 		{
@@ -24,14 +24,14 @@ namespace SME_Binning
 	public class AdderInMux : SimpleProcess
 	{
 		[InputBus]
-		BRAM1BOut bram1bout;
+        private readonly BRAM1BOut bram1bout = Scope.CreateOrLoadBus<BRAM1BOut>();
 		[InputBus]
-		BRAM1AForwarded bram1aout;
+        private readonly BRAM1AForwarded bram1aout = Scope.CreateOrLoadBus<BRAM1AForwarded>();
 		[InputBus]
-		Forward forward;
+        private readonly Forward forward = Scope.CreateOrLoadBus<Forward>();
 
 		[OutputBus]
-		AdderIn adderin;
+        private readonly AdderIn adderin = Scope.CreateOrLoadBus<AdderIn>();
 
 		protected override void OnTick()
 		{
@@ -49,20 +49,29 @@ namespace SME_Binning
 	public class BRAM0 : SimulationProcess
 	{
 		[InputBus]
-		BRAM0AIn ain;
+        private readonly BRAM0AIn ain = Scope.CreateOrLoadBus<BRAM0AIn>();
 		[InputBus]
-		BRAM0BIn bin;
+        private readonly BRAM0BIn bin = Scope.CreateOrLoadBus<BRAM0BIn>();
 
 		[OutputBus]
-		BRAM0AOut aout;
+        private readonly BRAM0AOut aout = Scope.CreateOrLoadBus<BRAM0AOut>();
 		[OutputBus]
-		BRAM0BOut bout;
+        private readonly BRAM0BOut bout = Scope.CreateOrLoadBus<BRAM0BOut>();
 
-		uint[] data = new uint[4096];
+        [OutputBus]
+        private readonly AXIBRAM0In axi0 = Scope.CreateOrLoadBus<AXIBRAM0In>();
+        [OutputBus]
+        private readonly AXIInput ctrl = Scope.CreateOrLoadBus<AXIInput>();
+        [OutputBus]
+        private readonly AXIBRAM1In axi1 = Scope.CreateOrLoadBus<AXIBRAM1In>();
+
+
+        uint[] data = new uint[4096];
 
 		public async override System.Threading.Tasks.Task Run()
 		{
-			while (true)
+			//while (true)
+			for(var i = 0; i < 100; i++)
 			{
 				await ClockAsync();
 				if (ain.ena)
@@ -89,21 +98,22 @@ namespace SME_Binning
 	public class BRAM1 : SimulationProcess
 	{
 		[InputBus]
-		BRAM1AIn ain;
+        private readonly BRAM1AIn ain = Scope.CreateOrLoadBus<BRAM1AIn>();
 		[InputBus]
-		BRAM1BIn bin;
+        private readonly BRAM1BIn bin = Scope.CreateOrLoadBus<BRAM1BIn>();
 
 		[OutputBus]
-		BRAM1AOut aout;
+        private readonly BRAM1AOut aout = Scope.CreateOrLoadBus<BRAM1AOut>();
 		[OutputBus]
-		BRAM1BOut bout;
+        private readonly BRAM1BOut bout = Scope.CreateOrLoadBus<BRAM1BOut>();
 
 		uint[] data = new uint[16384];
 
 		public async override System.Threading.Tasks.Task Run()
 		{
-			while (true)
-			{
+            //while (true)
+            for (var i = 0; i < 100; i++)
+            {
 				await ClockAsync();
 				if (ain.ena)
 				{
@@ -129,14 +139,14 @@ namespace SME_Binning
 	public class BRAM0AInMux : SimpleProcess
 	{
 		[InputBus]
-		AXIBRAM0In axi;
+        private readonly AXIBRAM0In axi = Scope.CreateOrLoadBus<AXIBRAM0In>();
 		[InputBus]
-		BRAM0AInIntermediate dist;
+        private readonly BRAM0AInIntermediate dist = Scope.CreateOrLoadBus<BRAM0AInIntermediate>();
 		[InputBus]
-		AXIInput ctrl;
+        private readonly AXIInput ctrl = Scope.CreateOrLoadBus<AXIInput>();
 
 		[OutputBus]
-		BRAM0AIn bram;
+        private readonly BRAM0AIn bram = Scope.CreateOrLoadBus<BRAM0AIn>();
 
 		protected override void OnTick()
 		{
@@ -160,14 +170,14 @@ namespace SME_Binning
 	public class BRAM0AOutDecoder : SimpleProcess
 	{
 		[InputBus]
-		BRAM0AOut bramout;
+        private readonly BRAM0AOut bramout = Scope.CreateOrLoadBus<BRAM0AOut>();
 		[InputBus]
-		AXIInput ctrl;
+        private readonly AXIInput ctrl = Scope.CreateOrLoadBus<AXIInput>();
 
 		[OutputBus]
-		AXIBRAM0Out axibram;
+        private readonly AXIBRAM0Out axibram = Scope.CreateOrLoadBus<AXIBRAM0Out>();
 		[OutputBus]
-		BRAM0AOutPipelinedIn pipeline;
+        private readonly BRAM0AOutPipelinedIn pipeline = Scope.CreateOrLoadBus<BRAM0AOutPipelinedIn>();
 
 		protected override void OnTick()
 		{
@@ -187,16 +197,16 @@ namespace SME_Binning
 	public class BRAM1AInMux : SimpleProcess
 	{
 		[InputBus]
-		AXIBRAM1In axi;
+        private readonly AXIBRAM1In axi = Scope.CreateOrLoadBus<AXIBRAM1In>();
 		[InputBus]
-		AdderOut adder;
+        private readonly AdderOut adder = Scope.CreateOrLoadBus<AdderOut>();
 		[InputBus]
-		BRAM0BOutPipelinedOut pipe;
+        private readonly BRAM0BOutPipelinedOut pipe = Scope.CreateOrLoadBus<BRAM0BOutPipelinedOut>();
 		[InputBus]
-		OutputStep2 ctrl;
+        private readonly OutputStep2 ctrl = Scope.CreateOrLoadBus<OutputStep2>();
 
 		[OutputBus]
-		BRAM1AInBroadcasterIn bram;
+        private readonly BRAM1AInBroadcasterIn bram = Scope.CreateOrLoadBus<BRAM1AInBroadcasterIn>();
 
 		protected override void OnTick()
 		{
@@ -220,12 +230,12 @@ namespace SME_Binning
 	public class BRAM1AInBroadcaster : SimpleProcess
 	{
 		[InputBus]
-		BRAM1AInBroadcasterIn input;
+        private readonly BRAM1AInBroadcasterIn input = Scope.CreateOrLoadBus<BRAM1AInBroadcasterIn>();
 
 		[OutputBus]
-		BRAM1AInBroadcasterOut output0;
+        private readonly BRAM1AInBroadcasterOut output0 = Scope.CreateOrLoadBus<BRAM1AInBroadcasterOut>();
 		[OutputBus]
-		BRAM1AIn output1;
+        private readonly BRAM1AIn output1 = Scope.CreateOrLoadBus<BRAM1AIn>();
 
 		protected override void OnTick()
 		{
@@ -245,14 +255,14 @@ namespace SME_Binning
 	public class Distributer : SimpleProcess
 	{
 		[InputBus]
-		AXIInput input;
+        private readonly AXIInput input = Scope.CreateOrLoadBus<AXIInput>();
 
 		[OutputBus]
-		OutputStep0 output;
+        private readonly OutputStep0 output = Scope.CreateOrLoadBus<OutputStep0>();
 		[OutputBus]
-		BRAM0AInIntermediate bramain;
+        private readonly BRAM0AInIntermediate bramain = Scope.CreateOrLoadBus<BRAM0AInIntermediate>();
 		[OutputBus]
-		BRAM0BIn brambin;
+        private readonly BRAM0BIn brambin = Scope.CreateOrLoadBus<BRAM0BIn>();
 
 		bool active = false;
 		UInt12 offset = 0;
@@ -303,10 +313,10 @@ namespace SME_Binning
 	public class BRAM0BOutForwarder : SimpleProcess
 	{
 		[InputBus]
-		BRAM0BOut bram0;
+        private readonly BRAM0BOut bram0 = Scope.CreateOrLoadBus<BRAM0BOut>();
 
 		[OutputBus]
-		BRAM1BIn bram1;
+        private readonly BRAM1BIn bram1 = Scope.CreateOrLoadBus<BRAM1BIn>();
 
 		protected override void OnTick()
 		{
@@ -320,10 +330,10 @@ namespace SME_Binning
 	public class BRAM1AOutForwarder : SimpleProcess
 	{
 		[InputBus]
-		BRAM1AOut bram;
+        private readonly BRAM1AOut bram = Scope.CreateOrLoadBus<BRAM1AOut>();
 
 		[OutputBus]
-		AXIBRAM1Out axi;
+        private readonly AXIBRAM1Out axi = Scope.CreateOrLoadBus<AXIBRAM1Out>();
 
 		protected override void OnTick()
 		{
@@ -335,10 +345,10 @@ namespace SME_Binning
 	public class OutputPipe0 : SimpleProcess
 	{
 		[InputBus]
-		OutputStep0 input;
+        private readonly OutputStep0 input = Scope.CreateOrLoadBus<OutputStep0>();
 
 		[OutputBus]
-		OutputStep1 output;
+        private readonly OutputStep1 output = Scope.CreateOrLoadBus<OutputStep1>();
 
 		protected override void OnTick()
 		{
@@ -350,26 +360,26 @@ namespace SME_Binning
 	public class Pipe : SimpleProcess
 	{
 		[InputBus]
-		BRAM0AOutPipelinedIn bram0ain;
+        private readonly BRAM0AOutPipelinedIn bram0ain = Scope.CreateOrLoadBus<BRAM0AOutPipelinedIn>();
 		[InputBus]
-		BRAM0BOut bram0bin;
+        private readonly BRAM0BOut bram0bin = Scope.CreateOrLoadBus<BRAM0BOut>();
 		[InputBus]
-		AXIInput axiin;
+        private readonly AXIInput axiin = Scope.CreateOrLoadBus<AXIInput>();
 		[InputBus]
-		OutputStep1 axiout;
+        private readonly OutputStep1 axiout = Scope.CreateOrLoadBus<OutputStep1>();
 		[InputBus]
-		BRAM1AInBroadcasterOut bram1ain;
+        private readonly BRAM1AInBroadcasterOut bram1ain = Scope.CreateOrLoadBus<BRAM1AInBroadcasterOut>();
 
 		[OutputBus]
-		BRAM0AOutPipelinedOut bram0aout;
+        private readonly BRAM0AOutPipelinedOut bram0aout = Scope.CreateOrLoadBus<BRAM0AOutPipelinedOut>();
 		[OutputBus]
-		BRAM0BOutPipelinedOut bram0bout;
+        private readonly BRAM0BOutPipelinedOut bram0bout = Scope.CreateOrLoadBus<BRAM0BOutPipelinedOut>();
 		[OutputBus]
-		Forward forward;
+        private readonly Forward forward = Scope.CreateOrLoadBus<Forward>();
 		[OutputBus]
-		BRAM1AForwarded bram1aforwarded;
+        private readonly BRAM1AForwarded bram1aforwarded = Scope.CreateOrLoadBus<BRAM1AForwarded>();
 		[OutputBus]
-		OutputStep2 output; // TODO that naming though
+        private readonly OutputStep2 output = Scope.CreateOrLoadBus<OutputStep2>(); // TODO that naming though
 
 		protected override void OnTick()
 		{
@@ -394,12 +404,12 @@ namespace SME_Binning
 	public class SignalConcat : SimpleProcess
 	{
 		[InputBus]
-		OutputStep0 dist;
+        private readonly OutputStep0 dist = Scope.CreateOrLoadBus<OutputStep0>();
 		[InputBus]
-		OutputStep2 pipe;
+        private readonly OutputStep2 pipe = Scope.CreateOrLoadBus<OutputStep2>();
 
 		[OutputBus]
-		AXIOutput axi;
+        private readonly AXIOutput axi = Scope.CreateOrLoadBus<AXIOutput>();
 
 		protected override void OnTick()
 		{
