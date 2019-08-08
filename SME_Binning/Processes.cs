@@ -70,8 +70,7 @@ namespace SME_Binning
 
 		public async override System.Threading.Tasks.Task Run()
 		{
-			//while (true)
-			for(var i = 0; i < 100; i++)
+			while (true)
 			{
 				await ClockAsync();
 				if (ain.ena)
@@ -111,8 +110,7 @@ namespace SME_Binning
 
 		public async override System.Threading.Tasks.Task Run()
 		{
-            //while (true)
-            for (var i = 0; i < 100; i++)
+            while (true)
             {
 				await ClockAsync();
 				if (ain.ena)
