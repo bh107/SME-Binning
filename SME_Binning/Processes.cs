@@ -60,24 +60,24 @@ namespace SME_Binning
 
         uint[] data;
 
-        public async override System.Threading.Tasks.Task Run()
+        protected override void OnTick()
         {
             if (ain.ena)
             {
-                if (ain.we)
+                if (ain.wrena)
                 {
-                    data[ain.addr >> 2] = ain.din;
+                    data[ain.addr >> 2] = ain.wrdata;
                 }
-                aout.dout = data[ain.addr >> 2];
+                aout.rddata = data[ain.addr >> 2];
             }
 
             if (bin.ena)
             {
-                if (bin.we)
+                if (bin.wrena)
                 {
-                    data[bin.addr >> 2] = bin.din;
+                    data[bin.addr >> 2] = bin.wrdata;
                 }
-                bout.dout = data[bin.addr >> 2];
+                bout.rddata = data[bin.addr >> 2];
             }
         }
     }
