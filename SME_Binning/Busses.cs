@@ -26,6 +26,14 @@ namespace SME_Binning
         uint rddata { get; set; }
     }
 
+    [InitializedBus]
+    public interface Detector : IBus
+    {
+        bool valid { get; set; }
+        uint idx { get; set; }
+        uint data { get; set; }
+    }
+
     [InitializedBus, TopLevelInputBus]
     public interface AXIInput : IBus
     {

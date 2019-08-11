@@ -82,22 +82,56 @@ namespace SME_Binning
         }
     }
 
+    public class BRAMPortAPacker : SimpleProcess
+    {
+        [InputBus]
+        public Detector input;
+
+        [OutputBus]
+        public BRAMCtrl output = Scope.CreateBus<BRAMCtrl>();
+
+        protected override void OnTick()
+        {
+            output.ena = input.valid;
+            output.addr = input.idx << 2;
+            output.wrena = false;
+            output.wrdata = 0;
+        }
+    }
+
+    public class BRAMPortBPacker : SimpleProcess
+    {
+        [InputBus]
+        public Detector dtct;
+        [InputBus]
+        public AdderResult adderout;
+
+        [OutputBus]
+        public BRAMCtrl output = Scope.CreateBus<BRAMCtrl>();
+
+        protected override void OnTick()
+        {
+            output.ena = dtct.valid;
+            output.addr = dtct.idx << 2;
+            output.wrena = dtct.valid;
+            output.wrdata = adderout.val;
+        }
+    }
+
     public class Forwarder : SimpleProcess
     {
         [InputBus]
-        public BRAMCtrl brama;
+        public Detector input;
         [InputBus]
-        public BRAMCtrl bramb;
+        public Detector intermediate;
 
         [OutputBus]
         public Forward forward;
 
         protected override void OnTick()
         {
-            forward.flg = brama.ena &&
-                brama.addr == bramb.addr &&
-                bramb.ena &&
-                bramb.wrena;
+            forward.flg = intermediate.valid &&
+                input.idx == intermediate.idx;
         }
     }
 
@@ -105,44 +139,16 @@ namespace SME_Binning
     public class Pipe : SimpleProcess
     {
         [InputBus]
-        private readonly BRAM0AOutPipelinedIn bram0ain = Scope.CreateOrLoadBus<BRAM0AOutPipelinedIn>();
-        [InputBus]
-        private readonly BRAM0BOut bram0bin = Scope.CreateOrLoadBus<BRAM0BOut>();
-        [InputBus]
-        private readonly AXIInput axiin = Scope.CreateOrLoadBus<AXIInput>();
-        [InputBus]
-        private readonly OutputStep1 axiout = Scope.CreateOrLoadBus<OutputStep1>();
-        [InputBus]
-        private readonly BRAM1AInBroadcasterOut bram1ain = Scope.CreateOrLoadBus<BRAM1AInBroadcasterOut>();
+        public Detector dtctin;
 
         [OutputBus]
-        private readonly BRAM0AOutPipelinedOut bram0aout = Scope.CreateOrLoadBus<BRAM0AOutPipelinedOut>();
-        [OutputBus]
-        private readonly BRAM0BOutPipelinedOut bram0bout = Scope.CreateOrLoadBus<BRAM0BOutPipelinedOut>();
-        [OutputBus]
-        private readonly Forward forward = Scope.CreateOrLoadBus<Forward>();
-        [OutputBus]
-        private readonly BRAM1AForwarded bram1aforwarded = Scope.CreateOrLoadBus<BRAM1AForwarded>();
-        [OutputBus]
-        private readonly OutputStep2 output = Scope.CreateOrLoadBus<OutputStep2>(); // TODO that naming though
+        public Detector dtctout = Scope.CreateBus<Detector>();
 
         protected override void OnTick()
         {
-            if (axiout.outputrdy == 0) // TODO vivado/MAXIVBinningAXIZynq/bd4 simulation forces.txt
-            {
-                bram0aout.dout = bram0ain.dout;
-                bram0bout.dout = bram0bin.dout;
-                forward.flg = bram1ain.we == 0xF && bram1ain.addr == bram0bin.dout;
-                bram1aforwarded.dout = bram1ain.din;
-            }
-            else
-            {
-                bram0aout.dout = 0;
-                bram0bout.dout = 0;
-                forward.flg = true;
-                bram1aforwarded.dout = 0;
-            }
-            output.outputrdy = axiout.outputrdy;
+            dtctout.valid = dtctin.valid;
+            dtctout.idx = dtctin.idx;
+            dtctout.data = dtctin.data;
         }
     }
 
