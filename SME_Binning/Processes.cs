@@ -4,20 +4,20 @@ using SME.VHDL;
 
 namespace SME_Binning
 {
-	
+
 	public class Adder : SimpleProcess
 	{
-		[InputBus]
-		private readonly AdderIn adderin = Scope.CreateOrLoadBus<AdderIn>();
-		[InputBus]
-		private BRAM0AOutPipelinedOut bram0out = Scope.CreateOrLoadBus<BRAM0AOutPipelinedOut>();
+        [InputBus]
+        public BRAMResult bram0;
+        [InputBus]
+        public BRAMResult bram1;
 
 		[OutputBus]
-		private readonly AdderOut output = Scope.CreateOrLoadBus<AdderOut>();
+		public AdderResult output = Scope.CreateBus<AdderResult>();
 
 		protected override void OnTick()
 		{
-			output.din = bram0out.dout + adderin.dout;
+            output.val = bram0.rddata + bram1.rddata;
 		}
 	}
 

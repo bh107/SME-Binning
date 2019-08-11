@@ -5,17 +5,11 @@ using SME.VHDL;
 namespace SME_Binning
 {
 
-	[InitializedBus]
-	public interface AdderIn : IBus
-	{
-		uint dout { get; set; }
-	}
-
-	[InitializedBus]
-	public interface AdderOut : IBus
-	{
-		uint din { get; set; }
-	}
+    [InitializedBus]
+    public interface AdderResult : IBus
+    {
+        uint val { get; set; }
+    }
 
     [InitializedBus]
     public interface BRAMCtrl : IBus
