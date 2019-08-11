@@ -8,18 +8,12 @@ namespace SME_Binning
     public class FullTester : SimulationProcess
     {
         [InputBus]
-        private readonly AXIOutput output = Scope.CreateOrLoadBus<AXIOutput>();
-        [InputBus]
-        private readonly AXIBRAM0Out bram0out = Scope.CreateOrLoadBus<AXIBRAM0Out>();
-        [InputBus]
-        private readonly AXIBRAM1Out bram1out = Scope.CreateOrLoadBus<AXIBRAM1Out>();
+        public BRAMResult bram_result;
 
         [OutputBus]
-        private readonly AXIInput input = Scope.CreateOrLoadBus<AXIInput>();
+        public BRAMCtrl bram_ctrl = Scope.CreateBus<BRAMCtrl>();
         [OutputBus]
-        private readonly AXIBRAM0In bram0in = Scope.CreateOrLoadBus<AXIBRAM0In>();
-        [OutputBus]
-        private readonly AXIBRAM1In bram1in = Scope.CreateOrLoadBus<AXIBRAM1In>();
+        public Detector output = Scope.CreateBus<Detector>();
 
         uint[] inputdata = {
             3, 4, 1, 6, 7, 8,
@@ -32,14 +26,7 @@ namespace SME_Binning
 
         Random rand = new Random();
 
-        public bool Completed = false;
-
-        private readonly bool m_shortTest;
-
-        public FullTester()
-            : this(false)
-        {
-        }
+        bool m_shortTest;
 
         public FullTester(bool shortTest)
         {
@@ -48,7 +35,6 @@ namespace SME_Binning
 
         public async override System.Threading.Tasks.Task Run()
         {
-            Completed = false;
             return;
 
             /*****
@@ -56,6 +42,7 @@ namespace SME_Binning
              * Hard coded test
              *
              *****/
+            /* TODO
             // Ensure that the network is waiting for input
             await ClockAsync();
             input.inputrdy = 0;
@@ -108,6 +95,7 @@ namespace SME_Binning
              * Continueous test, i.e. whether on not multiple inputs into same bins will work.
              *
              *****/
+            /* TODO
             // Ensure that the network is waiting for input
             await ClockAsync();
             input.inputrdy = 0;
@@ -176,6 +164,7 @@ namespace SME_Binning
              * Generated test
              *
              *****/
+            /* TODO
             // Ensure that the network is waiting for input
             await ClockAsync();
             input.inputrdy = 0;
@@ -272,6 +261,7 @@ namespace SME_Binning
 
             await ClockAsync();
             Completed = true;
+            */
         }
     }
 

@@ -9,16 +9,16 @@ namespace SME_Binning
     public class Adder : SimpleProcess
     {
         [InputBus]
-        public BRAMResult bram0;
+        public BRAMResult brama;
         [InputBus]
-        public BRAMResult bram1;
+        public BRAMResult bramb;
 
         [OutputBus]
         public AdderResult output = Scope.CreateBus<AdderResult>();
 
         protected override void OnTick()
         {
-            output.val = bram0.rddata + bram1.rddata;
+            output.val = brama.rddata + bramb.rddata;
         }
     }
 
@@ -32,11 +32,11 @@ namespace SME_Binning
         public Forward forward;
 
         [OutputBus]
-        public BRAMResult adderin = Scope.CreateBus<BRAMResult>();
+        public BRAMResult output = Scope.CreateBus<BRAMResult>();
 
         protected override void OnTick()
         {
-            adderin.rddata = forward.flg ? bramb.rddata : brama.rddata;
+            output.rddata = forward.flg ? bramb.rddata : brama.rddata;
         }
     }
 
