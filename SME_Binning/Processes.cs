@@ -5,6 +5,7 @@ using SME.VHDL;
 namespace SME_Binning
 {
 
+    [ClockedProcess]
     public class Adder : SimpleProcess
     {
         [InputBus]
@@ -21,28 +22,21 @@ namespace SME_Binning
         }
     }
 
-    public class AdderInMux : SimpleProcess
+    public class AdderMux : SimpleProcess
     {
         [InputBus]
-        private readonly BRAM1BOut bram1bout = Scope.CreateOrLoadBus<BRAM1BOut>();
+        public BRAMResult brama;
         [InputBus]
-        private readonly BRAM1AForwarded bram1aout = Scope.CreateOrLoadBus<BRAM1AForwarded>();
+        public BRAMResult bramb;
         [InputBus]
-        private readonly Forward forward = Scope.CreateOrLoadBus<Forward>();
+        public Forward forward;
 
         [OutputBus]
-        private readonly AdderIn adderin = Scope.CreateOrLoadBus<AdderIn>();
+        public BRAMResult adderin = Scope.CreateBus<BRAMResult>();
 
         protected override void OnTick()
         {
-            if (forward.flg)
-            {
-                adderin.dout = bram1aout.dout;
-            }
-            else
-            {
-                adderin.dout = bram1bout.dout;
-            }
+            adderin.rddata = forward.flg ? bramb.rddata : brama.rddata;
         }
     }
 
@@ -88,223 +82,22 @@ namespace SME_Binning
         }
     }
 
-    public class BRAM0AInMux : SimpleProcess
+    public class Forwarder : SimpleProcess
     {
         [InputBus]
-        private readonly AXIBRAM0In axi = Scope.CreateOrLoadBus<AXIBRAM0In>();
+        public BRAMCtrl brama;
         [InputBus]
-        private readonly BRAM0AInIntermediate dist = Scope.CreateOrLoadBus<BRAM0AInIntermediate>();
-        [InputBus]
-        private readonly AXIInput ctrl = Scope.CreateOrLoadBus<AXIInput>();
+        public BRAMCtrl bramb;
 
         [OutputBus]
-        private readonly BRAM0AIn bram = Scope.CreateOrLoadBus<BRAM0AIn>();
+        public Forward forward;
 
         protected override void OnTick()
         {
-            if (ctrl.inputrdy == 1)
-            {
-                bram.addr = dist.addr;
-                bram.din = dist.din;
-                bram.ena = dist.ena;
-                bram.we = dist.we;
-            }
-            else
-            {
-                bram.addr = (UInt12)(axi.addr >> 2);
-                bram.din = axi.din;
-                bram.ena = axi.ena;
-                bram.we = axi.we;
-            }
-        }
-    }
-
-    public class BRAM0AOutDecoder : SimpleProcess
-    {
-        [InputBus]
-        private readonly BRAM0AOut bramout = Scope.CreateOrLoadBus<BRAM0AOut>();
-        [InputBus]
-        private readonly AXIInput ctrl = Scope.CreateOrLoadBus<AXIInput>();
-
-        [OutputBus]
-        private readonly AXIBRAM0Out axibram = Scope.CreateOrLoadBus<AXIBRAM0Out>();
-        [OutputBus]
-        private readonly BRAM0AOutPipelinedIn pipeline = Scope.CreateOrLoadBus<BRAM0AOutPipelinedIn>();
-
-        protected override void OnTick()
-        {
-            if (ctrl.inputrdy == 1)
-            {
-                axibram.dout = 0;
-                pipeline.dout = bramout.dout;
-            }
-            else
-            {
-                axibram.dout = bramout.dout;
-                pipeline.dout = 0;
-            }
-        }
-    }
-
-    public class BRAM1AInMux : SimpleProcess
-    {
-        [InputBus]
-        private readonly AXIBRAM1In axi = Scope.CreateOrLoadBus<AXIBRAM1In>();
-        [InputBus]
-        private readonly AdderOut adder = Scope.CreateOrLoadBus<AdderOut>();
-        [InputBus]
-        private readonly BRAM0BOutPipelinedOut pipe = Scope.CreateOrLoadBus<BRAM0BOutPipelinedOut>();
-        [InputBus]
-        private readonly OutputStep2 ctrl = Scope.CreateOrLoadBus<OutputStep2>();
-
-        [OutputBus]
-        private readonly BRAM1AInBroadcasterIn bram = Scope.CreateOrLoadBus<BRAM1AInBroadcasterIn>();
-
-        protected override void OnTick()
-        {
-            if (ctrl.outputrdy == 1)
-            {
-                bram.addr = (UInt14)(axi.addr >> 2);
-                bram.din = axi.din;
-                bram.ena = axi.ena;
-                bram.we = axi.we;
-            }
-            else
-            {
-                bram.addr = (UInt14)pipe.dout;
-                bram.din = adder.din;
-                bram.ena = true;
-                bram.we = 0xF;
-            }
-        }
-    }
-
-    public class BRAM1AInBroadcaster : SimpleProcess
-    {
-        [InputBus]
-        private readonly BRAM1AInBroadcasterIn input = Scope.CreateOrLoadBus<BRAM1AInBroadcasterIn>();
-
-        [OutputBus]
-        private readonly BRAM1AInBroadcasterOut output0 = Scope.CreateOrLoadBus<BRAM1AInBroadcasterOut>();
-        [OutputBus]
-        private readonly BRAM1AIn output1 = Scope.CreateOrLoadBus<BRAM1AIn>();
-
-        protected override void OnTick()
-        {
-            output0.ena = input.ena;
-            output0.addr = input.addr;
-            output0.din = input.din;
-            output0.we = input.we;
-
-            output1.ena = input.ena;
-            output1.addr = input.addr;
-            output1.din = input.din;
-            output1.we = input.we;
-        }
-    }
-
-    [ClockedProcess]
-    public class Distributer : SimpleProcess
-    {
-        [InputBus]
-        private readonly AXIInput input = Scope.CreateOrLoadBus<AXIInput>();
-
-        [OutputBus]
-        private readonly OutputStep0 output = Scope.CreateOrLoadBus<OutputStep0>();
-        [OutputBus]
-        private readonly BRAM0AInIntermediate bramain = Scope.CreateOrLoadBus<BRAM0AInIntermediate>();
-        [OutputBus]
-        private readonly BRAM0BIn brambin = Scope.CreateOrLoadBus<BRAM0BIn>();
-
-        bool active = false;
-        UInt12 offset = 0;
-        uint size = 0;
-        byte countdown = 0;
-        bool can_reset = true;
-
-        protected override void OnTick()
-        {
-            output.outputrdy = (uint)(offset >= size ? 1 : 0);
-            if (active)
-            {
-                if (offset >= size)
-                {
-                    active = false;
-                    bramain.ena = false;
-                    brambin.ena = false;
-                }
-                else
-                {
-                    bramain.addr = offset;
-                    bramain.ena = true;
-                    bramain.we = 0;
-                    bramain.din = 0;
-
-                    brambin.addr = (UInt12)(size + offset);
-                    brambin.ena = true;
-                    brambin.we = 0;
-                    brambin.din = 0;
-
-                    offset++;
-                }
-            }
-            else
-            {
-                if (can_reset && input.rst == 1)
-                {
-                    offset = 0;
-                    size = input.size;
-                    active = true;
-                    countdown = 1;
-                }
-            }
-            can_reset = input.rst == 0;
-        }
-    }
-
-    public class BRAM0BOutForwarder : SimpleProcess
-    {
-        [InputBus]
-        private readonly BRAM0BOut bram0 = Scope.CreateOrLoadBus<BRAM0BOut>();
-
-        [OutputBus]
-        private readonly BRAM1BIn bram1 = Scope.CreateOrLoadBus<BRAM1BIn>();
-
-        protected override void OnTick()
-        {
-            bram1.addr = (UInt14)bram0.dout;
-            bram1.ena = true;
-            bram1.we = 0;
-            bram1.din = 0;
-        }
-    }
-
-    public class BRAM1AOutForwarder : SimpleProcess
-    {
-        [InputBus]
-        private readonly BRAM1AOut bram = Scope.CreateOrLoadBus<BRAM1AOut>();
-
-        [OutputBus]
-        private readonly AXIBRAM1Out axi = Scope.CreateOrLoadBus<AXIBRAM1Out>();
-
-        protected override void OnTick()
-        {
-            axi.dout = bram.dout;
-        }
-    }
-
-    [ClockedProcess]
-    public class OutputPipe0 : SimpleProcess
-    {
-        [InputBus]
-        private readonly OutputStep0 input = Scope.CreateOrLoadBus<OutputStep0>();
-
-        [OutputBus]
-        private readonly OutputStep1 output = Scope.CreateOrLoadBus<OutputStep1>();
-
-        protected override void OnTick()
-        {
-            output.outputrdy = input.outputrdy;
+            forward.flg = brama.ena &&
+                brama.addr == bramb.addr &&
+                bramb.ena &&
+                bramb.wrena;
         }
     }
 
@@ -350,22 +143,6 @@ namespace SME_Binning
                 bram1aforwarded.dout = 0;
             }
             output.outputrdy = axiout.outputrdy;
-        }
-    }
-
-    public class SignalConcat : SimpleProcess
-    {
-        [InputBus]
-        private readonly OutputStep0 dist = Scope.CreateOrLoadBus<OutputStep0>();
-        [InputBus]
-        private readonly OutputStep2 pipe = Scope.CreateOrLoadBus<OutputStep2>();
-
-        [OutputBus]
-        private readonly AXIOutput axi = Scope.CreateOrLoadBus<AXIOutput>();
-
-        protected override void OnTick()
-        {
-            axi.outputrdy = (dist.outputrdy << 1) | pipe.outputrdy;
         }
     }
 
