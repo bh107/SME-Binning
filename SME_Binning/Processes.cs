@@ -11,14 +11,14 @@ namespace SME_Binning
         [InputBus]
         public BRAMResult brama;
         [InputBus]
-        public BRAMResult bramb;
+        public Detector input;
 
         [OutputBus]
         public AdderResult output = Scope.CreateBus<AdderResult>();
 
         protected override void OnTick()
         {
-            output.val = brama.rddata + bramb.rddata;
+            output.val = input.data + brama.rddata;
         }
     }
 
@@ -27,7 +27,7 @@ namespace SME_Binning
         [InputBus]
         public BRAMResult brama;
         [InputBus]
-        public BRAMResult bramb;
+        public AdderResult adder;
         [InputBus]
         public Forward forward;
 
@@ -36,7 +36,7 @@ namespace SME_Binning
 
         protected override void OnTick()
         {
-            output.rddata = forward.flg ? bramb.rddata : brama.rddata;
+            output.rddata = forward.flg ? adder.val : brama.rddata;
         }
     }
 
@@ -105,16 +105,28 @@ namespace SME_Binning
         public Detector dtct;
         [InputBus]
         public AdderResult adderout;
+        [InputBus]
+        public BRAMCtrl external;
 
         [OutputBus]
         public BRAMCtrl output = Scope.CreateBus<BRAMCtrl>();
 
         protected override void OnTick()
         {
-            output.ena = dtct.valid;
-            output.addr = dtct.idx << 2;
-            output.wrena = dtct.valid;
-            output.wrdata = adderout.val;
+            if (dtct.valid)
+            {
+                output.ena = true;
+                output.addr = dtct.idx << 2;
+                output.wrena = true;
+                output.wrdata = adderout.val;
+            }
+            else
+            {
+                output.ena = external.ena;
+                output.addr = external.addr;
+                output.wrena = external.wrena;
+                output.wrdata = external.wrdata;
+            }
         }
     }
 
@@ -139,16 +151,16 @@ namespace SME_Binning
     public class Pipe : SimpleProcess
     {
         [InputBus]
-        public Detector dtctin;
+        public Detector input;
 
         [OutputBus]
-        public Detector dtctout = Scope.CreateBus<Detector>();
+        public Detector output = Scope.CreateBus<Detector>();
 
         protected override void OnTick()
         {
-            dtctout.valid = dtctin.valid;
-            dtctout.idx = dtctin.idx;
-            dtctout.data = dtctin.data;
+            output.valid = input.valid;
+            output.idx   = input.idx;
+            output.data  = input.data;
         }
     }
 

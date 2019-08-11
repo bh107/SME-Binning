@@ -5,7 +5,7 @@ using SME.VHDL;
 namespace SME_Binning
 {
 
-    public class FullTester : SimulationProcess
+    public class Tester : SimulationProcess
     {
         [InputBus]
         public BRAMResult bram_result;
@@ -26,11 +26,11 @@ namespace SME_Binning
 
         Random rand = new Random();
 
-        bool m_shortTest;
+        bool short_test;
 
-        public FullTester(bool shortTest)
+        public Tester(bool short_test)
         {
-            m_shortTest = shortTest;
+            this.short_test = short_test;
         }
 
         public async override System.Threading.Tasks.Task Run()
