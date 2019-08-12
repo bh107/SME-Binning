@@ -76,8 +76,8 @@ namespace SME_Binning
             {
                 await MemRead((uint)(i % mem_size));
                 System.Diagnostics.Debug.Assert(
-                    bram_result.rddata == output_data[i-1], 
-                    $"Error on index {i}: Expected {output_data[i-1]}, got {bram_result.rddata}");
+                    bram_result.rddata == output_data[i-1],
+                    $"Error on index {i-1}: Expected {output_data[i-1]}, got {bram_result.rddata}");
             }
         }
 
@@ -107,10 +107,10 @@ namespace SME_Binning
             uint[] input_data  = { 3, 4, 1, 6, 7, 8 };
             uint[] output_data = { 9, 5, 15 };
             await Test(true, input_idxs, input_data, output_data);
-            
+
             /*****
              *
-             * Continueous test 
+             * Continueous test
              * Tests whether on not multiple inputs into same bins without resetting will work.
              *
              *****/
@@ -119,6 +119,17 @@ namespace SME_Binning
             for (int i = 0; i < input_data.Length; i++)
                 output_data[input_idxs[i]] += input_data[i];
             await Test(false, input_idxs, input_data, output_data);
+
+            /*****
+             *
+             * Test to capture error, which occurs when there is a gap between two
+             * of the same indices
+             *
+             */
+            input_idxs = new uint[] { 0, 1, 0, 1 };
+            input_data = new uint[] { 1, 2, 3, 4 };
+            output_data = new uint[] { 4, 6 };
+            await Test(true, input_idxs, input_data, output_data);
 
             /*****
              *

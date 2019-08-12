@@ -22,7 +22,7 @@ namespace SME_Binning
                 var idle = new IdleChecker();
                 var input_pipe = new Pipe();
                 var intermediate_pipe = new Pipe();
-                var tester = new Tester(true, mem_size);
+                var tester = new Tester(false, mem_size);
 
                 adder.brama = mux.output;
                 adder.input = input_pipe.output;
