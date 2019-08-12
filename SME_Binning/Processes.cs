@@ -147,6 +147,20 @@ namespace SME_Binning
         }
     }
 
+    public class IdleChecker : SimpleProcess
+    {
+        [InputBus]
+        public Detector input;
+
+        [OutputBus]
+        public Idle output = Scope.CreateBus<Idle>();
+
+        protected override void OnTick() 
+        {
+            output.flg = !input.valid;
+        }
+    }
+
     [ClockedProcess]
     public class Pipe : SimpleProcess
     {

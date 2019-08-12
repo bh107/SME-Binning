@@ -19,6 +19,7 @@ namespace SME_Binning
                 var bram_portb = new BRAMPortBPacker();
                 var forward = new Forwarder();
                 var mux = new AdderMux();
+                var idle = new IdleChecker();
                 var input_pipe = new Pipe();
                 var intermediate_pipe = new Pipe();
                 var tester = new Tester(true, mem_size);
@@ -36,16 +37,17 @@ namespace SME_Binning
                 mux.brama = bram.aout;
                 mux.adder = adder.output;
                 mux.forward = forward.forward;
+                idle.input = intermediate_pipe.output;
                 input_pipe.input = tester.output;
                 intermediate_pipe.input = input_pipe.output;
                 tester.bram_result = bram.bout;
-                tester.status = intermediate_pipe.output;
+                tester.idle = idle.output;
 
                 sim
                     .AddTopLevelInputs(input_pipe.input, tester.bram_ctrl)
-                    .AddTopLevelOutputs(bram.bout)
-                    //.BuildCSV()
-                    //.BuildVHDL()
+                    .AddTopLevelOutputs(bram.bout, idle.output)
+                    .BuildCSVFile()
+                    .BuildVHDL()
                     .Run();
             }
         }

@@ -40,4 +40,10 @@ namespace SME_Binning
         bool flg { get; set; }
     }
 
+    [InitializedBus]
+    public interface Idle : IBus
+    {
+        bool flg { get; set; }
+    }
+
 }

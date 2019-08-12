@@ -10,7 +10,7 @@ namespace SME_Binning
         [InputBus]
         public BRAMResult bram_result;
         [InputBus]
-        public Detector status;
+        public Idle idle;
 
         [OutputBus]
         public BRAMCtrl bram_ctrl = Scope.CreateBus<BRAMCtrl>();
@@ -67,7 +67,7 @@ namespace SME_Binning
                 await ToBinning(input_idxs[i], input_data[i]);
 
             // Wait until binning is idle
-            while (status.valid)
+            while (!idle.flg)
                 await ClockAsync();
 
             // Verify that the result matches the expected output
