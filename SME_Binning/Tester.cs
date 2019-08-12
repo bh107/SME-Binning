@@ -17,11 +17,6 @@ namespace SME_Binning
         [OutputBus]
         public Detector output = Scope.CreateBus<Detector>();
 
-        // Hard coded test data
-        uint[] input_idxs  = { 0, 1, 1, 0, 2, 2 };
-        uint[] input_data  = { 3, 4, 1, 6, 7, 8 };
-        uint[] output_data = { 9, 5, 15 };
-
         int mem_size;
         Random rand = new Random();
         bool short_test;
@@ -60,6 +55,31 @@ namespace SME_Binning
             bram_ctrl.wrdata = 0;
         }
 
+        private async System.Threading.Tasks.Task Test(uint[] input_idxs, uint[] input_data, uint[] output_data)
+        {
+            // Ensure that memory is initialised as 0
+            for (uint i = 0; i < mem_size; i++)
+                await MemWrite(i, 0);
+
+            // Transfer inputdata
+            for (uint i = 0; i < input_idxs.Length; i++)
+                await ToBinning(input_idxs[i], input_data[i]);
+
+            // Wait until binning is idle
+            while (status.valid)
+                await ClockAsync();
+
+            // Verify that the result matches the expected output
+            await MemRead(0);
+            for (uint i = 1; i <= output_data.Length; i++)
+            {
+                await MemRead(i);
+                System.Diagnostics.Debug.Assert(
+                    bram_result.rddata == output_data[i-1], 
+                    string.Format("Error on index {0}: Expected {1}, got {2}", i, output_data[i-1], bram_result.rddata));
+            }
+        }
+
         private async System.Threading.Tasks.Task ToBinning(uint idx, uint data)
         {
             output.valid = true;
@@ -74,33 +94,19 @@ namespace SME_Binning
 
         public async override System.Threading.Tasks.Task Run()
         {
+            // Ensure that the network is waiting for input
+            await ClockAsync();
+
             /*****
              *
              * Hard coded test
              *
              *****/
-            // Ensure that the network is waiting for input
-            await ClockAsync();
-
-            // Ensure that memory is initialised as 0
-            for (uint i = 0; i < mem_size; i++)
-                await MemWrite(i, 0);
-
-            // Transfer inputdata
-            for (uint i = 0; i < input_idxs.Length; i++)
-                await ToBinning(input_idxs[i], input_data[i]);
-
-            // Wait until binning is idle
-            while (status.valid)
-                await ClockAsync();
-
-            // Verify that the result matches the expected output
-            for (uint i = 0; i < output_data.Length; i++)
-            {
-                await MemRead(i);
-                await ClockAsync();
-                System.Diagnostics.Debug.Assert(bram_result.rddata == output_data[i], string.Format("Error on index {0}: Expected {1}, got {2}", i, output_data[i], bram_result.rddata));
-            }
+            uint[] input_idxs  = { 0, 1, 1, 0, 2, 2 };
+            uint[] input_data  = { 3, 4, 1, 6, 7, 8 };
+            uint[] output_data = { 9, 5, 15 };
+            await Test(input_idxs, input_data, output_data);
+            
             return;
             /*****
              *
