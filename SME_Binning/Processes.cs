@@ -138,7 +138,7 @@ namespace SME_Binning
         public Detector intermediate;
 
         [OutputBus]
-        public Forward forward;
+        public Forward forward = Scope.CreateBus<Forward>();
 
         protected override void OnTick()
         {
