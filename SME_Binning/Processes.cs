@@ -68,7 +68,6 @@ namespace SME_Binning
                 {
                     data[ain.addr >> 2] = ain.wrdata;
                 }
-                aout.rddata = data[ain.addr >> 2];
             }
 
             if (bin.ena)
@@ -77,8 +76,12 @@ namespace SME_Binning
                 {
                     data[bin.addr >> 2] = bin.wrdata;
                 }
-                bout.rddata = data[bin.addr >> 2];
             }
+
+            if (ain.ena)
+                aout.rddata = data[ain.addr >> 2];
+            if (bin.ena)
+                bout.rddata = data[bin.addr >> 2];
         }
     }
 
