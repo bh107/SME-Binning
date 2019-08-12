@@ -11,15 +11,17 @@ namespace SME_Binning
         {
             using(var sim = new Simulation())
             {
+                int mem_size = 1024;
+
                 var adder = new Adder();
-                var bram = new BRAM(1024);
+                var bram = new BRAM(mem_size);
                 var bram_porta = new BRAMPortAPacker();
                 var bram_portb = new BRAMPortBPacker();
                 var forward = new Forwarder();
                 var mux = new AdderMux();
                 var input_pipe = new Pipe();
                 var intermediate_pipe = new Pipe();
-                var tester = new Tester(true);
+                var tester = new Tester(true, mem_size);
 
                 adder.brama = mux.output;
                 adder.input = input_pipe.output;
@@ -37,6 +39,7 @@ namespace SME_Binning
                 input_pipe.input = tester.output;
                 intermediate_pipe.input = input_pipe.output;
                 tester.bram_result = bram.bout;
+                tester.status = intermediate_pipe.output;
 
                 sim
                     .AddTopLevelInputs(input_pipe.input, tester.bram_ctrl)

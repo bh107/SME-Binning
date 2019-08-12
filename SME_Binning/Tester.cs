@@ -9,85 +9,97 @@ namespace SME_Binning
     {
         [InputBus]
         public BRAMResult bram_result;
+        [InputBus]
+        public Detector status;
 
         [OutputBus]
         public BRAMCtrl bram_ctrl = Scope.CreateBus<BRAMCtrl>();
         [OutputBus]
         public Detector output = Scope.CreateBus<Detector>();
 
-        uint[] inputdata = {
-            3, 4, 1, 6, 7, 8,
-            0, 1, 1, 0, 2, 2,
-        };
+        // Hard coded test data
+        uint[] input_idxs  = { 0, 1, 1, 0, 2, 2 };
+        uint[] input_data  = { 3, 4, 1, 6, 7, 8 };
+        uint[] output_data = { 9, 5, 15 };
 
-        uint[] outputdata = {
-            9, 5, 15,
-        };
-
+        int mem_size;
         Random rand = new Random();
-
         bool short_test;
 
-        public Tester(bool short_test)
+        public Tester(bool short_test, int mem_size)
         {
             this.short_test = short_test;
+            this.mem_size = mem_size;
+        }
+
+        private async System.Threading.Tasks.Task MemRead(uint addr)
+        {
+            bram_ctrl.ena = true;
+            bram_ctrl.addr = addr << 2;
+            bram_ctrl.wrena = false;
+            bram_ctrl.wrdata = 0;
+            await ClockAsync();
+            // Ensure no latching
+            bram_ctrl.ena = false;
+            bram_ctrl.addr = 0;
+            bram_ctrl.wrena = false;
+            bram_ctrl.wrdata = 0;
+        }
+
+        private async System.Threading.Tasks.Task MemWrite(uint addr, uint data)
+        {
+            bram_ctrl.ena = true;
+            bram_ctrl.addr = addr << 2;
+            bram_ctrl.wrena = true;
+            bram_ctrl.wrdata = data;
+            await ClockAsync();
+            // Ensure no latching
+            bram_ctrl.ena = false;
+            bram_ctrl.addr = 0;
+            bram_ctrl.wrena = false;
+            bram_ctrl.wrdata = 0;
+        }
+
+        private async System.Threading.Tasks.Task ToBinning(uint idx, uint data)
+        {
+            output.valid = true;
+            output.idx = idx;
+            output.data = data;
+            await ClockAsync();
+            // Ensure no latching
+            output.valid = false;
+            output.idx = 0;
+            output.data = 0;
         }
 
         public async override System.Threading.Tasks.Task Run()
         {
-            return;
-
             /*****
              *
              * Hard coded test
              *
              *****/
-            /* TODO
             // Ensure that the network is waiting for input
             await ClockAsync();
-            input.inputrdy = 0;
-            input.size = 0;
-            input.rst = 0;
+
+            // Ensure that memory is initialised as 0
+            for (uint i = 0; i < mem_size; i++)
+                await MemWrite(i, 0);
 
             // Transfer inputdata
-            for (uint i = 0; i < inputdata.Length; i++)
+            for (uint i = 0; i < input_idxs.Length; i++)
+                await ToBinning(input_idxs[i], input_data[i]);
+
+            // Wait until binning is idle
+            while (status.valid)
+                await ClockAsync();
+
+            // Verify that the result matches the expected output
+            for (uint i = 0; i < output_data.Length; i++)
             {
-                bram0in.addr = (UInt14)(i << 2);
-                bram0in.din = inputdata[i];
-                bram0in.ena = true;
-                bram0in.we = 0xF;
+                await MemRead(i);
                 await ClockAsync();
-            }
-
-            // Ensure that no write comes from the outside
-            bram0in.addr = 0;
-            bram0in.ena = false;
-            bram0in.din = 0;
-            bram0in.we = 0;
-            await ClockAsync();
-
-            // Start the network
-            input.inputrdy = 1;
-            input.size = (uint)(inputdata.Length >> 1);
-            input.rst = 1;
-            await ClockAsync();
-            await ClockAsync();
-            await ClockAsync();
-
-            // Wait for the network to finish
-            while (output.outputrdy != 3) { Console.WriteLine("{0}", output.outputrdy); await ClockAsync(); }
-            input.inputrdy = 0;
-
-            // Verify that the output matches the precomputed output
-            for (uint i = 0; i < outputdata.Length; i++)
-            {
-                bram1in.addr = (short)(i << 2);
-                bram1in.ena = true;
-                bram1in.we = 0;
-                bram1in.din = 0;
-                await ClockAsync();
-                await ClockAsync();
-                System.Diagnostics.Debug.Assert(bram1out.dout == outputdata[i], bram1out.dout + " != " + outputdata[i]);
+                System.Diagnostics.Debug.Assert(bram_result.rddata == output_data[i], string.Format("Error on index {0}: Expected {1}, got {2}", i, output_data[i], bram_result.rddata));
             }
             return;
             /*****
