@@ -74,7 +74,7 @@ namespace SME_Binning
             await MemRead(0);
             for (uint i = 1; i <= output_data.Length; i++)
             {
-                await MemRead(i);
+                await MemRead((uint)(i % mem_size));
                 System.Diagnostics.Debug.Assert(
                     bram_result.rddata == output_data[i-1], 
                     $"Error on index {i}: Expected {output_data[i-1]}, got {bram_result.rddata}");
@@ -122,107 +122,39 @@ namespace SME_Binning
 
             /*****
              *
-             * Generated test
+             * Generated test - short
              *
              *****/
-            /* TODO
-            // Ensure that the network is waiting for input
-            await ClockAsync();
-            input.inputrdy = 0;
-            input.size = 0;
-            input.rst = 0;
-
-            // Set the sizes used by the generated test
-            int inputsize = 2304; // 9kb / 4
-            int inputmid = inputsize >> 1;
-            int outputsize = 10000;
-            inputdata = new uint[inputsize];
-            outputdata = new uint[outputsize];
-
-            // Generate input
-            for (int i = 0; i < inputsize; i++)
+            int short_test_length = 1000;
+            input_idxs  = new uint[short_test_length];
+            input_data  = new uint[short_test_length];
+            output_data = new uint[mem_size];
+            for (int i = 0; i < short_test_length; i++)
             {
-                if (i < inputmid)
-                    inputdata[i] = (uint)rand.Next(1000);
-                else
-                    inputdata[i] = (uint)rand.Next(outputsize);
+                input_idxs[i] = (uint)rand.Next(mem_size);
+                input_data[i] = (uint)rand.Next(10);
+                output_data[input_idxs[i]] += input_data[i];
             }
+            await Test(true, input_idxs, input_data, output_data);
 
-            // Generate output
-            for (int i = 0; i < inputmid; i++)
+            if (short_test)
+                return;
+            /*****
+             *
+             * Generated test - long
+             *
+             */
+            int long_test_length = 100 * mem_size;
+            input_idxs  = new uint[long_test_length];
+            input_data  = new uint[long_test_length];
+            output_data = new uint[mem_size];
+            for (int i = 0; i < long_test_length; i++)
             {
-                outputdata[inputdata[i + inputmid]] += inputdata[i];
+                input_idxs[i] = (uint)rand.Next(mem_size);
+                input_data[i] = (uint)rand.Next();
+                output_data[input_idxs[i]] += input_data[i];
             }
-
-            // Ensure network is not running
-            input.inputrdy = 0;
-            input.rst = 0;
-            input.size = 0;
-            await ClockAsync();
-
-            // Transfer inputdata to input memory
-            for (uint i = 0; i < inputsize; i++)
-            {
-                bram0in.addr = (UInt14)(i << 2);
-                bram0in.din = inputdata[i];
-                bram0in.ena = true;
-                bram0in.we = 0xF;
-                await ClockAsync();
-            }
-
-            // Zero initialize output memory
-            for (uint i = 0; i < outputsize; i++)
-            {
-                bram1in.addr = (short)(i << 2);
-                bram1in.din = 0;
-                bram1in.ena = true;
-                bram1in.we = 0xF;
-                await ClockAsync();
-            }
-            bram1in.ena = false;
-            bram1in.we = 0;
-
-            // Initialize and start network
-            bram0in.addr = 0;
-            bram0in.ena = false;
-            bram0in.din = 0;
-            bram0in.we = 0;
-            await ClockAsync();
-            input.inputrdy = 1;
-            input.size = (uint)inputmid;
-            input.rst = 1;
-            await ClockAsync();
-            await ClockAsync();
-            await ClockAsync(); // TODO as above
-
-            int clocks = 3;
-            // Wait for network to finish
-            while (output.outputrdy != 3)
-            {
-                await ClockAsync();
-                clocks++;
-            }
-            input.inputrdy = 0;
-            Console.WriteLine("Generated binning of {0} random values took {1} clock ticks", inputdata.Length >> 1, clocks);
-
-            // Verify that the data in the output memory matches the precomputed results
-            int errors = 0;
-            for (uint i = 0; i < outputsize; i++)
-            {
-                bram1in.addr = (short)(i << 2);
-                bram1in.ena = true;
-                bram1in.din = 0;
-                bram1in.we = 0;
-                await ClockAsync();
-                await ClockAsync();
-                bool equal = bram1out.dout == outputdata[i];
-                System.Diagnostics.Debug.Assert(equal, bram1out.dout + " != " + outputdata[i]);
-                errors += equal ? 0 : 1;
-            }
-
-            await ClockAsync();
-            Completed = true;
-            */
+            await Test(true, input_idxs, input_data, output_data);
         }
     }
 
