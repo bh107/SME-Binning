@@ -1,5 +1,6 @@
 ﻿using System;
 using SME;
+using SME.Components;
 using SME.VHDL;
 
 namespace SME_Binning
@@ -9,7 +10,7 @@ namespace SME_Binning
     public class Adder : SimpleProcess
     {
         [InputBus]
-        public BRAMResult brama;
+        public Stored stored;
         [InputBus]
         public Detector input;
 
@@ -18,75 +19,38 @@ namespace SME_Binning
 
         protected override void OnTick()
         {
-            output.val = input.data + brama.rddata;
+            output.val = input.data + stored.val;
         }
     }
 
     public class AdderMux : SimpleProcess
     {
         [InputBus]
-        public BRAMResult brama;
+        public Detector input_pipe;
+        [InputBus]
+        public TrueDualPortMemory<uint>.IReadResultA brama;
         [InputBus]
         public AdderResult adder;
         [InputBus]
         public Forward forward;
         [InputBus]
-        public BRAMResult last;
+        public TrueDualPortMemory<uint>.IReadResultA last;
 
         [OutputBus]
-        public BRAMResult output = Scope.CreateBus<BRAMResult>();
+        public Stored output = Scope.CreateBus<Stored>();
 
         protected override void OnTick()
         {
-            switch (forward.option)
-            {
-                default:
-                case ForwardOptions.dont: output.rddata = brama.rddata; break;
-                case ForwardOptions.last: output.rddata = last.rddata; break;
-                case ForwardOptions.intermediate: output.rddata = adder.val; break;
-            }
-        }
-    }
-
-    [ClockedProcess]
-    public class BRAM : SimpleProcess
-    {
-        public BRAM(int size)
-        {
-            data = new uint[size];
-        }
-
-        [InputBus]
-        public BRAMCtrl ain;
-        [InputBus]
-        public BRAMCtrl bin;
-
-        [OutputBus]
-        public BRAMResult aout = Scope.CreateBus<BRAMResult>();
-        [OutputBus]
-        public BRAMResult bout = Scope.CreateBus<BRAMResult>();
-
-        uint[] data;
-
-        protected override void OnTick()
-        {
-            if (ain.ena)
-            {
-                aout.rddata = data[ain.addr >> 2];
-                if (ain.wrena)
+            if (input_pipe.valid)
+                switch (forward.option)
                 {
-                    data[ain.addr >> 2] = ain.wrdata;
+                    default:
+                    case ForwardOptions.dont: output.val = brama.Data; break;
+                    case ForwardOptions.last: output.val = last.Data; break;
+                    case ForwardOptions.intermediate: output.val = adder.val; break;
                 }
-            }
-
-            if (bin.ena)
-            {
-                bout.rddata = data[bin.addr >> 2];
-                if (bin.wrena)
-                {
-                    data[bin.addr >> 2] = bin.wrdata;
-                }
-            }
+            else
+                output.val = 0;
         }
     }
 
@@ -96,14 +60,14 @@ namespace SME_Binning
         public Detector input;
 
         [OutputBus]
-        public BRAMCtrl output = Scope.CreateBus<BRAMCtrl>();
+        public TrueDualPortMemory<uint>.IControlA output;
 
         protected override void OnTick()
         {
-            output.ena = input.valid;
-            output.addr = input.idx << 2;
-            output.wrena = false;
-            output.wrdata = 0;
+            output.Enabled = input.valid;
+            output.Address = input.idx;
+            output.IsWriting = false;
+            output.Data = 0;
         }
     }
 
@@ -114,26 +78,26 @@ namespace SME_Binning
         [InputBus]
         public AdderResult adderout;
         [InputBus]
-        public BRAMCtrl external;
+        public TrueDualPortMemory<uint>.IControlB external;
 
         [OutputBus]
-        public BRAMCtrl output = Scope.CreateBus<BRAMCtrl>();
+        public TrueDualPortMemory<uint>.IControlB output;
 
         protected override void OnTick()
         {
             if (dtct.valid)
             {
-                output.ena = true;
-                output.addr = dtct.idx << 2;
-                output.wrena = true;
-                output.wrdata = adderout.val;
+                output.Enabled = true;
+                output.Address = dtct.idx;
+                output.IsWriting = true;
+                output.Data = adderout.val;
             }
             else
             {
-                output.ena = external.ena;
-                output.addr = external.addr;
-                output.wrena = external.wrena;
-                output.wrdata = external.wrdata;
+                output.Enabled = external.Enabled;
+                output.Address = external.Address;
+                output.IsWriting = external.IsWriting;
+                output.Data = external.Data;
             }
         }
     }
@@ -150,15 +114,15 @@ namespace SME_Binning
         [OutputBus]
         public Forward forward = Scope.CreateBus<Forward>();
         [OutputBus]
-        public BRAMResult last = Scope.CreateBus<BRAMResult>();
+        public TrueDualPortMemory<uint>.IReadResultA last = Scope.CreateBus<TrueDualPortMemory<uint>.IReadResultA>();
 
         bool last_valid = false;
-        uint last_idx = 0;
+        int last_idx = 0;
         uint last_data = 0;
 
         protected override void OnTick()
         {
-            last.rddata = last_data;
+            last.Data = last_data;
 
             if (last_valid && input.idx == last_idx)
                 forward.option = ForwardOptions.last;

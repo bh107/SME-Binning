@@ -1,5 +1,6 @@
 ﻿using System;
 using SME;
+using SME.Components;
 using SME.VHDL;
 
 namespace SME_Binning
@@ -14,7 +15,7 @@ namespace SME_Binning
                 int mem_size = 1024;
 
                 var adder = new Adder();
-                var bram = new BRAM(mem_size);
+                var bram = new TrueDualPortMemory<uint>(mem_size);
                 var bram_porta = new BRAMPortAPacker();
                 var bram_portb = new BRAMPortBPacker();
                 var forward = new Forwarder();
@@ -24,30 +25,31 @@ namespace SME_Binning
                 var intermediate_pipe = new Pipe();
                 var tester = new Tester(false, mem_size);
 
-                adder.brama = mux.output;
+                adder.stored = mux.output;
                 adder.input = input_pipe.output;
-                bram.ain = bram_porta.output;
-                bram.bin = bram_portb.output;
                 bram_porta.input = tester.output;
+                bram_porta.output = bram.ControlA;
                 bram_portb.adderout = adder.output;
                 bram_portb.dtct = intermediate_pipe.output;
                 bram_portb.external = tester.bram_ctrl;
+                bram_portb.output = bram.ControlB;
                 forward.adder = adder.output;
                 forward.input = input_pipe.output;
                 forward.intermediate = intermediate_pipe.output;
-                mux.brama = bram.aout;
+                mux.brama = bram.ReadResultA;
                 mux.adder = adder.output;
                 mux.forward = forward.forward;
+                mux.input_pipe = input_pipe.output;
                 mux.last = forward.last;
                 idle.input = intermediate_pipe.output;
                 input_pipe.input = tester.output;
                 intermediate_pipe.input = input_pipe.output;
-                tester.bram_result = bram.bout;
+                tester.bram_result = bram.ReadResultB;
                 tester.idle = idle.output;
 
                 sim
-                    .AddTopLevelInputs(input_pipe.input, tester.bram_ctrl)
-                    .AddTopLevelOutputs(bram.bout, idle.output)
+                    .AddTopLevelInputs(input_pipe.input, bram.ControlB)
+                    .AddTopLevelOutputs(bram.ReadResultB, idle.output)
                     .BuildCSVFile()
                     .BuildVHDL()
                     .Run();

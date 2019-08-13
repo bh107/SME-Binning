@@ -1,5 +1,6 @@
 ﻿using System;
 using SME;
+using SME.Components;
 using SME.VHDL;
 
 namespace SME_Binning
@@ -12,25 +13,10 @@ namespace SME_Binning
     }
 
     [InitializedBus]
-    public interface BRAMCtrl : IBus
-    {
-        bool ena { get; set; }
-        uint addr { get; set; }
-        bool wrena { get; set; }
-        uint wrdata { get; set; }
-    }
-
-    [InitializedBus]
-    public interface BRAMResult : IBus
-    {
-        uint rddata { get; set; }
-    }
-
-    [InitializedBus]
     public interface Detector : IBus
     {
         bool valid { get; set; }
-        uint idx { get; set; }
+        int idx { get; set; }
         uint data { get; set; }
     }
 
@@ -44,6 +30,12 @@ namespace SME_Binning
     {
         [InitialValue(true)]
         bool flg { get; set; }
+    }
+
+    [InitializedBus]
+    public interface Stored : IBus
+    {
+        uint val { get; set; }
     }
 
 }
