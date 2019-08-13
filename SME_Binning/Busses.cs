@@ -37,7 +37,7 @@ namespace SME_Binning
     [InitializedBus]
     public interface Forward : IBus
     {
-        bool flg { get; set; }
+        ForwardOptions option { get; set; }
     }
 
     public interface Idle : IBus

@@ -30,13 +30,21 @@ namespace SME_Binning
         public AdderResult adder;
         [InputBus]
         public Forward forward;
+        [InputBus]
+        public BRAMResult last;
 
         [OutputBus]
         public BRAMResult output = Scope.CreateBus<BRAMResult>();
 
         protected override void OnTick()
         {
-            output.rddata = forward.flg ? adder.val : brama.rddata;
+            switch (forward.option)
+            {
+                default:
+                case ForwardOptions.dont: output.rddata = brama.rddata; break;
+                case ForwardOptions.last: output.rddata = last.rddata; break;
+                case ForwardOptions.intermediate: output.rddata = adder.val; break;
+            }
         }
     }
 
@@ -64,6 +72,7 @@ namespace SME_Binning
         {
             if (ain.ena)
             {
+                aout.rddata = data[ain.addr >> 2];
                 if (ain.wrena)
                 {
                     data[ain.addr >> 2] = ain.wrdata;
@@ -72,16 +81,12 @@ namespace SME_Binning
 
             if (bin.ena)
             {
+                bout.rddata = data[bin.addr >> 2];
                 if (bin.wrena)
                 {
                     data[bin.addr >> 2] = bin.wrdata;
                 }
             }
-
-            if (ain.ena)
-                aout.rddata = data[ain.addr >> 2];
-            if (bin.ena)
-                bout.rddata = data[bin.addr >> 2];
         }
     }
 
@@ -139,14 +144,32 @@ namespace SME_Binning
         public Detector input;
         [InputBus]
         public Detector intermediate;
+        [InputBus]
+        public AdderResult adder;
 
         [OutputBus]
         public Forward forward = Scope.CreateBus<Forward>();
+        [OutputBus]
+        public BRAMResult last = Scope.CreateBus<BRAMResult>();
+
+        bool last_valid = false;
+        uint last_idx = 0;
+        uint last_data = 0;
 
         protected override void OnTick()
         {
-            forward.flg = intermediate.valid &&
-                input.idx == intermediate.idx;
+            last.rddata = last_data;
+
+            if (last_valid && input.idx == last_idx)
+                forward.option = ForwardOptions.last;
+            else if (intermediate.valid && input.idx == intermediate.idx)
+                forward.option = ForwardOptions.intermediate;
+            else
+                forward.option = ForwardOptions.dont;
+            
+            last_valid = intermediate.valid;
+            last_idx = intermediate.idx;
+            last_data = adder.val;
         }
     }
 

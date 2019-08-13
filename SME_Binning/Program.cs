@@ -32,11 +32,13 @@ namespace SME_Binning
                 bram_portb.adderout = adder.output;
                 bram_portb.dtct = intermediate_pipe.output;
                 bram_portb.external = tester.bram_ctrl;
+                forward.adder = adder.output;
                 forward.input = input_pipe.output;
                 forward.intermediate = intermediate_pipe.output;
                 mux.brama = bram.aout;
                 mux.adder = adder.output;
                 mux.forward = forward.forward;
+                mux.last = forward.last;
                 idle.input = intermediate_pipe.output;
                 input_pipe.input = tester.output;
                 intermediate_pipe.input = input_pipe.output;
